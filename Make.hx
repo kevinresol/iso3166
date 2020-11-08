@@ -1,5 +1,6 @@
 package;
 
+import haxe.macro.Expr;
 import haxe.macro.Context;
 import haxe.io.Path;
 
@@ -18,9 +19,27 @@ class Make {
 		
 		final data:Array<Data> = raw.parse();
 		
-		final alpha2 = macro class Alpha2 {}
-		final alpha3 = macro class Alpha3 {}
-		final numeric = macro class Numeric {}
+		
+		
+		final cases23:Array<Case> = [];
+		final cases2N:Array<Case> = [];
+		final cases32:Array<Case> = [];
+		final cases3N:Array<Case> = [];
+		final casesN2:Array<Case> = [];
+		final casesN3:Array<Case> = [];
+		
+		final alpha2 = macro class Alpha2 {
+			@:to public function toAlpha3():Alpha3 return ${{expr: ESwitch(macro (cast this:Alpha2), cases23, null), pos: null}}
+			@:to public function toNumeric():Numeric return ${{expr: ESwitch(macro (cast this:Alpha2), cases2N, null), pos: null}}
+		}
+		final alpha3 = macro class Alpha3 {
+			@:to public function toAlpha2():Alpha2 return ${{expr: ESwitch(macro (cast this:Alpha3), cases32, null), pos: null}}
+			@:to public function toNumeric():Numeric return ${{expr: ESwitch(macro (cast this:Alpha3), cases3N, null), pos: null}}
+		}
+		final numeric = macro class Numeric {
+			@:to public function toAlpha2():Alpha2 return ${{expr: ESwitch(macro (cast this:Numeric), casesN2, null), pos: null}}
+			@:to public function toAlpha3():Alpha3 return ${{expr: ESwitch(macro (cast this:Numeric), casesN3, null), pos: null}}
+		}
 		
 		alpha2.kind = alpha3.kind = TDAbstract(macro:String, [], [macro:String]);
 		numeric.kind = TDAbstract(macro:Int, [], [macro:Int]);
@@ -30,30 +49,58 @@ class Make {
 		final unique2 = [];
 		final unique3 = [];
 		final uniqueN = [];
+		
 		for(entry in data) {
+			final a2 = entry.Alpha2;
+			final a3 = entry.Alpha3;
+			final n = entry.Numeric;
 			
-			if(!unique2.contains(entry.Alpha2)) {
-				unique2.push(entry.Alpha2);
+			if(!unique2.contains(a2)) {
+				unique2.push(a2);
 				alpha2.fields.push({
-					name: entry.Alpha2,
+					name: a2,
 					pos: null,
-					kind: FVar(null, {expr: EConst(CString(entry.Alpha2)), pos: null}),
+					kind: FVar(null, {expr: EConst(CString(a2)), pos: null}),
+				});
+				cases23.push({
+					values: [macro $i{a2}],
+					expr: macro Alpha3.$a3,
+				});
+				cases2N.push({
+					values: [macro $i{a2}],
+					expr: macro Numeric.$a3,
 				});
 			}
-			if(!unique3.contains(entry.Alpha3)) {
-				unique3.push(entry.Alpha3);
+			if(!unique3.contains(a3)) {
+				unique3.push(a3);
 				alpha3.fields.push({
-					name: entry.Alpha3,
+					name: a3,
 					pos: null,
-					kind: FVar(null, {expr: EConst(CString(entry.Alpha3)), pos: null}),
+					kind: FVar(null, {expr: EConst(CString(a3)), pos: null}),
+				});
+				cases32.push({
+					values: [macro $i{a3}],
+					expr: macro Alpha2.$a2,
+				});
+				cases3N.push({
+					values: [macro $i{a3}],
+					expr: macro Numeric.$a3,
 				});
 			}
-			if(!uniqueN.contains(entry.Numeric)) {
-				uniqueN.push(entry.Numeric);
+			if(!uniqueN.contains(n)) {
+				uniqueN.push(n);
 				numeric.fields.push({
-					name: entry.Alpha3,
+					name: a3,
 					pos: null,
-					kind: FVar(null, {expr: EConst(CInt('${entry.Numeric}')), pos: null}),
+					kind: FVar(null, {expr: EConst(CInt('$n')), pos: null}),
+				});
+				casesN2.push({
+					values: [macro $i{a3}],
+					expr: macro Alpha2.$a2,
+				});
+				casesN3.push({
+					values: [macro $i{a3}],
+					expr: macro Alpha3.$a3,
 				});
 			}
 		}
