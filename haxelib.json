@@ -1,0 +1,18 @@
+{
+	"name": "iso3166",
+	"description": "ISO3166 Country Codes",
+	"classPath": "src",
+	"url": "https://github.com/kevinresol/iso3166",
+	"contributors": [
+		"kevinresol"
+	],
+	"version": "1.0.0",
+	"releasenote": "Initial Release",
+	"tags": [
+		"iso3166",
+		"country",
+		"codes",
+		"code"
+	],
+	"license": "MIT"
+}
